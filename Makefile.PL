@@ -17,7 +17,7 @@ my @defines;
 
 my $path_separator = ":";
 if($^O eq "MSWin32") {
-    push @defines,  "XP_PC";
+    push @defines,  "XP_WIN";
     $path_separator = ";";
 } else {
     push @defines, "XP_UNIX";
@@ -175,10 +175,10 @@ END_OF_SOURCE
     close $test_script;
 
     my $exe = tmpnam();;
-    my $cc = join(" ", $Config{cc}, $libs, @ccflags, "-l${lib}", "-o", $exe, (map { "-I$_" } @incs), "test_js.c");
+    my $cc = join(" ", $Config{cc}, @ccflags, "-o", $exe, "test_js.c", "-I.", (map { "-I$_" } @incs), $libs, "-l${lib}" );
     qx($cc);
     if ($?) {
-        print "Failed compiling test_js.c. ABORTING\n";
+        print "Failed compiling test_js.c. ABORTING\n\n$cc\n";
         exit 0;
     }
     unlink("test_js.c");
@@ -200,6 +200,11 @@ else {
 }
 
 # Write makefile
+my $libs_flags = "";
+if($^O eq "MSWin32") {
+    $libs_flags = ":nosearch";
+}
+
 WriteMakefile(
     NAME            => "JavaScript",
     VERSION_FROM    => "lib/JavaScript.pm",
@@ -210,7 +215,7 @@ WriteMakefile(
     ABSTRACT_FROM   => "lib/JavaScript.pm", # retrieve abstract from module
     AUTHOR          => "Claes Jakobsson <claesjac\@cpan.org>",
     CCFLAGS         => join(" ", @ccflags),
-    LIBS            => ["$libs -l${lib}"], # e.g., "-lm"
+    LIBS            => ["$libs_flags $libs -l${lib}"], # e.g., "-lm"
     INC             => join(" ", map { "-I$_" } @incs),
     LICENSE         => "perl",
     OBJECT          => q/$(O_FILES)/,
