@@ -83,9 +83,9 @@ if(-f "/etc/gentoo-release") {
 
 }
 
-# test for DarwinPorts
-if (-d "/opt/local/include/spidermonkey") {
-    push @incs, "/opt/local/include/spidermonkey";
+# test for MacPorts
+if (-d "/opt/local/include/js") {
+    push @incs, "/opt/local/include/js", "/opt/local/include/nspr";
     push @libs, "/opt/local/lib";
 }
 
