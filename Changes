@@ -1,6 +1,7 @@
 Revision history for Perl extension JavaScript.
 
 1.13  ...
+	- Fixes compilation issues agains SM from MacPorts. [rt.cpan.org #48702] (Dominic Mitchell)
 	- Fixes compilation issues on Win32 (Apachez)
 	- Don't try to reinit UTF8 cstrings if already done as that'll assert libjs
 	- Don't consume the elements of arrays when converting to JS. [rt.cpan.org #46356] (Sergey Zhuravlev)

@@ -59,7 +59,7 @@ JSTrapStatus PJS_perl_trap_handler(JSContext *cx, JSScript *script, jsbytecode *
 }
 
 /* Create a runtime */
-#ifdef JS_C_STRINGS_ARE_UTF8 && JS_VERSION >= 180
+#if defined(JS_C_STRINGS_ARE_UTF8) && JS_VERSION >= 180
 static bool initialized_utf8_cstrings = FALSE;
 #endif
 
@@ -72,7 +72,7 @@ PJS_CreateRuntime(int maxbytes) {
         croak("Failed to allocate memoery for PJS_Runtime");
     }
     
-#ifdef JS_C_STRINGS_ARE_UTF8 && JS_VERSION >= 180
+#if defined(JS_C_STRINGS_ARE_UTF8) && JS_VERSION >= 180
     if (initialized_utf8_cstrings == FALSE) {
         JS_SetCStringsAreUTF8();
         initialized_utf8_cstrings = TRUE;
