@@ -1,5 +1,8 @@
 Revision history for Perl extension JavaScript.
 
+1.14  2009-12-01
+	- No functional changes, just a re-dist. (Damn you OS X for preserving resource forks when I don't want it...)
+	
 1.13  2009-11-30
 	- Fixes compilation issues agains SM from MacPorts. [rt.cpan.org #48702] (Dominic Mitchell)
 	- Fixes compilation issues on Win32 (Apachez)
