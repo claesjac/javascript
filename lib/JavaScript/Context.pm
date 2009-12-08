@@ -273,6 +273,8 @@ sub bind_value {
             croak "${name} already exists, unbind it first" if $num == $#paths;
 
             next;
+        } else {
+          $@ = undef;
         }
         
         jsc_bind_value($self, $parent,
