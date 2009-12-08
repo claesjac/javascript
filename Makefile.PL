@@ -144,6 +144,8 @@ else {
     }
 }
 
+if ($ENV{JS_LIB_NAME}) { $lib = $ENV{JS_LIB_NAME} }
+
 # Write JavaScript_Env.h
 open my $header, ">JavaScript_Env.h" || die $!;
 
