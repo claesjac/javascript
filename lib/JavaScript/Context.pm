@@ -37,6 +37,17 @@ sub eval {
     return $rval;
 }
 
+sub set_pending_exception {
+    my ($self, $exception) = @_;
+
+    if(!defined($exception)){
+        return;
+    }
+    my $rval = jsc_set_pending_exception($self, $exception); 
+
+    return $rval;
+}
+
 sub eval_file {
     my ($self, $file) = @_;
 

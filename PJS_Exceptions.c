@@ -18,7 +18,7 @@ void PJS_report_exception(PJS_Context *pcx) {
     if (JSVALToSV(PJS_GetJSContext(pcx), NULL, val, &ERRSV) == JS_FALSE) {
         croak("Failed to convert error object to perl object");
     }
-
+    
     JS_ClearPendingException(PJS_GetJSContext(pcx));
     
     /* convert internal JS parser exceptions into JavaScript::Error objects. */

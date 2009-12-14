@@ -230,6 +230,25 @@ jsc_bind_value(cx, parent, name, object)
         RETVAL
 
 void
+jsc_set_pending_exception(cx, exception)
+    JavaScript::Context cx;
+    SV                  *exception;
+    PREINIT:
+        jsval       js_exception;
+        JSObject    *pobj;
+    CODE:
+        sv_setsv(ERRSV, &PL_sv_undef);
+
+        pobj = JS_GetGlobalObject(PJS_GetJSContext(cx));
+
+        if(PJS_ConvertPerlToJSType(PJS_GetJSContext(cx), NULL, pobj, exception, &js_exception) == JS_FALSE){
+            js_exception = JSVAL_VOID;
+            XSRETURN_UNDEF;
+        }
+
+        JS_SetPendingException(PJS_GetJSContext(cx), js_exception);
+
+void
 jsc_unbind_value(cx, parent, name)
     JavaScript::Context cx;
     char                *parent;
@@ -287,7 +306,7 @@ jsc_eval(cx, source, name)
         JS_DestroyScript(jcx, script);
 #else
         ok = JS_EvaluateScript(jcx, gobj, source, strlen(source), name, 1, &rval);
-        if (ok == JS_FALSE) {
+        if (ok == JS_FALSE || JS_IsExceptionPending(jcx) == JS_TRUE) {
             PJS_report_exception(cx);
         }
 #endif
