@@ -130,7 +130,7 @@ JSBool PJS_call_javascript_function(PJS_Context *pcx, jsval func, SV *args, jsva
     
     /* Clear $@ */
     sv_setsv(ERRSV, &PL_sv_undef);
-
+    
     av = (AV *) SvRV(args);
     arg_count = av_len(av);
 
@@ -155,7 +155,7 @@ JSBool PJS_call_javascript_function(PJS_Context *pcx, jsval func, SV *args, jsva
         return JS_FALSE;
     }
 
-    return JS_TRUE;
+    return JS_IsExceptionPending(PJS_GetJSContext(pcx)) ? JS_FALSE : JS_TRUE;
 }
 
 JSBool perl_call_jsfunc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval) {
@@ -169,7 +169,7 @@ JSBool perl_call_jsfunc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
     
     code = JSVAL_TO_PRIVATE(tmp);
-    if (perl_call_sv_with_jsvals(cx, obj, code, NULL, argc, argv, rval) < 0) {
+    if (perl_call_sv_with_jsvals(cx, obj, code, NULL, argc, argv, rval) < 0 || JS_IsExceptionPending(cx)) {
         return JS_FALSE;
     }
     

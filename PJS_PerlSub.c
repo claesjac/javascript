@@ -131,7 +131,7 @@ static JSBool perlsub_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     if (self != NULL) {
         IV tmp = SvIV((SV *) SvRV((SV *) self));
         PJS_PerlSub *sub = INT2PTR(PJS_PerlSub *, tmp);
-        if (perl_call_sv_with_jsvals(cx, obj, sub->cv, NULL, argc, argv, rval) < 0) {
+        if (perl_call_sv_with_jsvals(cx, obj, sub->cv, NULL, argc, argv, rval) < 0 || JS_IsExceptionPending(cx)) {
             return JS_FALSE;
         }
         

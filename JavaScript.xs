@@ -238,10 +238,10 @@ jsc_set_pending_exception(cx, exception)
         JSObject    *pobj;
     CODE:
         sv_setsv(ERRSV, &PL_sv_undef);
-
+        JS_ClearPendingException(PJS_GetJSContext(cx));
         pobj = JS_GetGlobalObject(PJS_GetJSContext(cx));
 
-        if(PJS_ConvertPerlToJSType(PJS_GetJSContext(cx), NULL, pobj, exception, &js_exception) == JS_FALSE){
+        if(PJS_ConvertPerlToJSType(PJS_GetJSContext(cx), NULL, pobj, exception, &js_exception) == JS_FALSE) {
             js_exception = JSVAL_VOID;
             XSRETURN_UNDEF;
         }
@@ -308,6 +308,9 @@ jsc_eval(cx, source, name)
         ok = JS_EvaluateScript(jcx, gobj, source, strlen(source), name, 1, &rval);
         if (ok == JS_FALSE || JS_IsExceptionPending(jcx) == JS_TRUE) {
             PJS_report_exception(cx);
+        }
+        else {
+            sv_setsv(ERRSV, &PL_sv_undef);
         }
 #endif
         if (ok == JS_FALSE) {

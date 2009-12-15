@@ -11,7 +11,7 @@ BEGIN {
     plan skip_all => "Engine version 1.7 or later require" if $version < 1.7;
 }
 
-plan tests => 24;
+plan tests => 26;
 
 my $runtime = new JavaScript::Runtime();
 my $context = $runtime->create_context();
@@ -117,6 +117,16 @@ catch (e) {
 EOP
 is($@, "bar" );
 
+$ret =
+$context->eval(<<EOP);
+try {
+  throw "foo";
+}
+catch (e) {
+}
+1;
+EOP
+is($@, undef);
 
 $context->bind_class(constructor => sub { die "Can't create"; }, name => 'CantCreate');
 $ret = 
@@ -138,6 +148,7 @@ is($@, undef);
         $context->set_pending_exception('bleh');
     };
     $context->bind_value(flibble => $thing);
+
     $context->eval("flibble();\n");
     like($@, qr{bleh});
     $context->eval("flibble();\n");
@@ -145,7 +156,6 @@ is($@, undef);
 
     $context->eval("function(){ };\n");
     is($@, undef);
-
     $context->eval("try { flibble(); } catch(e){ e = undefined }");
     is($@, undef);
 }
