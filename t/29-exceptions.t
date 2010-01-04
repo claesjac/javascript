@@ -168,3 +168,5 @@ is($@, undef);
     $context->bind_value(yargh => $thing);
     $context->eval("(function(){ yargh();})()");
 }
+
+undef $context;

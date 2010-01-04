@@ -1,5 +1,11 @@
 Revision history for Perl extension JavaScript.
 
+1.15  2010-01-04
+	- It's now possible to set a pending exception in the context from Perl space (Scott McWhirter)
+	- can now set JS_LIB_NAME in environment prior to running perl Makefile.PL 
+	  so that different library name can be specified (James)
+	- binding a value explicitly unsets $@ after it tests to see if something has been bound. (James)
+	
 1.14  2009-12-01
 	- No functional changes, just a re-dist. (Damn you OS X for preserving resource forks when I don't want it...)
 	
