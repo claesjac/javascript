@@ -559,6 +559,10 @@ To remove the handler call this method with an undefined argument.
 
 The handler is called when a script branches backwards during execution, when a function returns and the end of the script. To continue execution the handler must return a true value. To abort execution either throw an exception or return a false value.
 
+=item set_pending_exception ( $value )
+
+Converts the I<$value> to JavaScript and sets it as the pending exception for the context. 
+
 =item get_version ( )
 
 Returns the runtime version of the context as a string, for exmaple C<1.7> or or C<ECMAv3>.
