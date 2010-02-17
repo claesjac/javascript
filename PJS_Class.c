@@ -49,7 +49,6 @@ PJS_Property *PJS_get_property_by_id(PJS_Class *pcls, int8 tinyid) {
 void PJS_free_class(PJS_Class *pcls) {
     PJS_Function *method;
     PJS_Property *property;
-    
     if (pcls == NULL) {
         return;
     }
@@ -61,7 +60,7 @@ void PJS_free_class(PJS_Class *pcls) {
     if (pcls->pkg != NULL) {
         Safefree(pcls->pkg);
     }
-
+    
     method = pcls->methods;
     while (method != NULL) {
         PJS_Function *next = method->_next;
@@ -80,10 +79,11 @@ void PJS_free_class(PJS_Class *pcls) {
     PJS_free_JSPropertySpec(pcls->ps);
     PJS_free_JSPropertySpec(pcls->static_ps);
     
-    if (pcls->flags & PJS_FREE_JSCLASS) {
+    /* Seems like SM handles this part for us */
+/*    if (pcls->flags & PJS_FREE_JSCLASS) {
         Safefree(pcls->clasp->name);
         Safefree(pcls->clasp);
-    }
+    }  */
     
     Safefree(pcls);
 }
@@ -159,7 +159,7 @@ void PJS_bind_class(PJS_Context *pcx, char *name, char *pkg, SV *cons, HV *fs, H
                                PJS_construct_perl_object, 0,
                                pcls->ps /* ps */, pcls->fs,
                                pcls->static_ps /* static_ps */, pcls->static_fs /* static_fs */);
-
+                                                   
     if (pcls->proto == NULL) {
         PJS_free_class(pcls);
         croak("Failed to initialize class in context");
@@ -175,16 +175,19 @@ void PJS_bind_class(PJS_Context *pcx, char *name, char *pkg, SV *cons, HV *fs, H
 void PJS_store_class(PJS_Context *pcx, PJS_Class *cls) {
     /* Add class to list of classes in contexts */
     SV *sv = newSV(0);
-	sv_setref_pv(sv, "JavaScript::PerlClass", (void*) cls);
+    sv_setref_pv(sv, "JavaScript::PerlClass", (void*) cls);
 	
     if (cls->clasp->name != NULL) {
-        SvREFCNT_inc(sv);
-        hv_store(pcx->class_by_name, cls->clasp->name, strlen(cls->clasp->name), sv, 0);
+      if(hv_store(pcx->class_by_name, cls->clasp->name, strlen(cls->clasp->name), sv, 0) == NULL) {
+        /* TODO: better error here */
+        croak("Failed to store class: %s in class_by_name in context", cls->clasp->name);
+        return;
+      }
     }
     
     if (cls->pkg != NULL) {
-        SvREFCNT_inc(sv);
-        hv_store(pcx->class_by_package, cls->pkg, strlen(cls->pkg), sv, 0);
+      SvREFCNT_inc(sv);
+      hv_store(pcx->class_by_package, cls->pkg, strlen(cls->pkg), sv, 0);
     }
 }
 
@@ -218,7 +221,7 @@ JSBool PJS_construct_perl_object(JSContext *cx, JSObject *obj, uintN argc, jsval
     }
 
     /* Check if we are allowed to instanciate this class */
-    if ((pcls->flags & PJS_CLASS_NO_INSTANCE)) {
+    if (pcls->flags & PJS_CLASS_NO_INSTANCE) {
         JS_ReportError(cx, "Class '%s' can't be instanciated", pcls->clasp->name);
         return JS_FALSE;
     }
@@ -234,6 +237,8 @@ JSBool PJS_construct_perl_object(JSContext *cx, JSObject *obj, uintN argc, jsval
         JS_SetPrivate(cx, obj, (void *) rsv); 
     }
 
+    SvREFCNT_inc(pcls->self);
+    
     return JS_TRUE;
 }
 

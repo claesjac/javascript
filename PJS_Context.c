@@ -142,18 +142,18 @@ void PJS_DestroyContext(PJS_Context *pcx) {
     }
 
     if (pcx->function_by_name) {
-        hv_undef(pcx->function_by_name);
+        SvREFCNT_dec(pcx->function_by_name);
         pcx->function_by_name = NULL;
     }
         
     if (pcx->class_by_name) {
-        hv_undef(pcx->class_by_name);
+        SvREFCNT_dec(pcx->class_by_name);
         pcx->class_by_name = NULL;
     }
     
     if (pcx->class_by_package) {
-        hv_undef(pcx->class_by_package);
-        pcx->class_by_package = NULL;
+        SvREFCNT_dec(pcx->class_by_package);
+        pcx->class_by_package = NULL;   
     }
     
     /* Destory context */
