@@ -236,8 +236,6 @@ JSBool PJS_construct_perl_object(JSContext *cx, JSObject *obj, uintN argc, jsval
                 
         JS_SetPrivate(cx, obj, (void *) rsv); 
     }
-
-    SvREFCNT_inc(pcls->self);
     
     return JS_TRUE;
 }
