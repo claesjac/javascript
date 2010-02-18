@@ -541,7 +541,7 @@ DESTROY(obj)
     JavaScript::PerlArray obj;
     CODE:
         if (obj->av != NULL) {
-            av_undef(obj->av);
+            SvREFCNT_dec(obj->av);
         }
         obj->av = NULL;
         Safefree(obj);
@@ -572,7 +572,7 @@ DESTROY(obj)
     JavaScript::PerlHash obj;
     CODE:
         if (obj->hv != NULL) {
-            hv_undef(obj->hv);
+            SvREFCNT_dec(obj->hv);
         }
         obj->hv = NULL;
         Safefree(obj);
