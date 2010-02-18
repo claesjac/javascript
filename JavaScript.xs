@@ -10,7 +10,7 @@
 
 typedef PJS_PerlArray * JavaScript__PerlArray;
 typedef PJS_PerlHash *  JavaScript__PerlHash;
-typedef PJS_PerlSub *   Javascript__PerlSub;
+typedef PJS_PerlSub *   JavaScript__PerlSub;
 typedef PJS_Class *     JavaScript__PerlClass;
 typedef PJS_Function *  JavaScript__PerlFunction;
 typedef PJS_Context *   JavaScript__Context;
@@ -576,6 +576,14 @@ DESTROY(obj)
         }
         obj->hv = NULL;
         Safefree(obj);
+
+MODULE = JavaScript     PACKAGE = JavaScript::PerlSub
+
+void
+DESTROY(obj)
+    JavaScript::PerlSub obj;
+    CODE:
+      Safefree(obj);
 
 MODULE = JavaScript     PACKAGE = JavaScript::PerlClass
 
