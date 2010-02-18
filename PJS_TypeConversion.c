@@ -381,7 +381,7 @@ JSBool JSVALToSV(JSContext *cx, HV *seen, jsval v, SV** sv) {
 	      SV *content = sv_2mortal(newRV_noinc(newSViv(PTR2IV(object))));
 	      SV *pcx = sv_2mortal(newSViv(PTR2IV(PJS_GET_CONTEXT(cx))));
 	      jsval *x;
-                
+               
 	      Newz(1, x, 1, jsval);
 	      if (x == NULL) {
 		croak("Failed to allocate memory for jsval");
@@ -395,7 +395,7 @@ JSBool JSVALToSV(JSContext *cx, HV *seen, jsval v, SV** sv) {
 						 sv_2mortal(newSViv(PTR2IV(x))), NULL));
 	      return JS_TRUE;	      
 	    }
-            
+
             destroy_hv = 0;
             if (!seen) {
                 seen = newHV();
@@ -420,7 +420,7 @@ JSBool JSVALToSV(JSContext *cx, HV *seen, jsval v, SV** sv) {
             }
             
             if (destroy_hv) {
-                hv_undef(seen);
+              SvREFCNT_dec(seen);
             }
         }
         else {
@@ -483,7 +483,7 @@ SV *JSHASHToSV(JSContext *cx, HV *seen, JSObject *object) {
             jsval value;
             SV *val_sv;
             
-            SV *js_key_sv = newSV(0);
+            SV *js_key_sv = sv_newmortal();
             char *js_key = JS_GetStringBytes(JSVAL_TO_STRING(key));
             sv_setpv(js_key_sv, js_key);
 
