@@ -1,7 +1,8 @@
 Revision history for Perl extension JavaScript.
 
-1.16  ...
+1.16  2010-02-20
 	- Fixed a bunch of memory leaks (Scott++ for reporting them)
+	- Added some missing private docs for jsc_set_pending_exception
 	
 1.15  2010-01-04
 	- It's now possible to set a pending exception in the context from Perl space (Scott McWhirter)

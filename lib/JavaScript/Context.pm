@@ -690,6 +690,10 @@ Toggle the options on the underlying JSContext
 
 Return the address of the context for identification purposes.
 
+=item jsc_set_pending_exception ( PJS_Context *context, SV *exception )
+
+Set a pending exception on the context
+
 =back
 
 =end PRIVATE
