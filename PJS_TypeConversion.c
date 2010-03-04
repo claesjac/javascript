@@ -33,6 +33,7 @@ JSBool PJS_ConvertPerlToJSType(JSContext *cx, JSObject *seen, JSObject *obj, SV 
     int destroy_seen = 0; /* TODO - do we _need_ to clean up after us? */
     
     if (!seen) {
+        JS_MaybeGC(cx);
         JS_AddRoot(cx, &seen);
         seen = JS_NewObject(cx, NULL, NULL, NULL);
         if(seen == NULL)
