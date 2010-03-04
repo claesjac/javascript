@@ -21,6 +21,9 @@ sub new {
     $Context{$ptr} = $self;
     weaken($Context{$ptr});
     $Runtime{$ptr} = $runtime;
+
+    # XXX - Should we set a sensible default?
+    # $self->set_thread_stack_limit(500_000);
     
     return $self;
 }
@@ -46,6 +49,11 @@ sub set_pending_exception {
     my $rval = jsc_set_pending_exception($self, $exception); 
 
     return $rval;
+}
+
+sub set_thread_stack_limit {
+    my ($self, $size) = @_;
+    jsc_set_thread_stack_limit($self, $size);
 }
 
 sub eval_file {
@@ -563,6 +571,10 @@ The handler is called when a script branches backwards during execution, when a 
 
 Converts the I<$value> to JavaScript and sets it as the pending exception for the context. 
 
+=item set_thread_stack_limit ( $value )
+
+Set the ThreadStackLimit for the context.
+
 =item get_version ( )
 
 Returns the runtime version of the context as a string, for exmaple C<1.7> or or C<ECMAv3>.
@@ -693,6 +705,10 @@ Return the address of the context for identification purposes.
 =item jsc_set_pending_exception ( PJS_Context *context, SV *exception )
 
 Set a pending exception on the context
+
+=item jsc_set_thread_stack_limit ( PJS_Context *context, SV *size )
+
+Set the ThreadStackSize on the context
 
 =back
 

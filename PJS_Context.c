@@ -172,7 +172,7 @@ PJS_DefineFunction(PJS_Context *inContext, const char *functionName, SV *perlCal
     SV *sv;
     
     if (PJS_GetFunctionByName(inContext, functionName) != NULL) {
-        warn("Function named '%s' is already defined in the context");
+        warn("Function named '%s' is already defined in the context", functionName);
         return NULL;
     }
     
@@ -196,6 +196,10 @@ PJS_DefineFunction(PJS_Context *inContext, const char *functionName, SV *perlCal
     }
     
     return function;
+}
+
+void PJS_set_thread_stack_limit(JSContext *cx, SV *size){
+    JS_SetThreadStackLimit(cx, (jsuword*) SvUV(size) );
 }
 
 /* Called by context when a branch occurs */
@@ -238,6 +242,7 @@ JSBool PJS_branch_handler(JSContext *cx, JSScript *script) {
 
     return status;
 }
+
 
 /*JSContext *
 PJS_GetJSContext(PJS_Context *fromContext) {

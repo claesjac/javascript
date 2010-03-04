@@ -152,7 +152,14 @@ jsc_set_version(cx, version)
     const char *version;
     CODE:
         JS_SetVersion(PJS_GetJSContext(cx), JS_StringToVersion(version));
-        
+
+void
+jsc_set_thread_stack_limit(cx, size)
+    JavaScript::Context cx;
+    SV *size;
+    CODE:
+        PJS_set_thread_stack_limit(PJS_GetJSContext(cx), size);
+       
 void
 jsc_set_branch_handler(cx, handler)
     JavaScript::Context cx;
