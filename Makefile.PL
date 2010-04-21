@@ -38,113 +38,139 @@ my @extra_headers;
 # Directory to prefix #include with
 my $inc_dir = "";
 
+my $STATIC_BUILD = 0;
+if(-d "./spidermonkey"){
+    print "Building static SpiderMonkey... ";
+
+    my $debug_enable = $ENV{JS_DEBUG} ? '' : 'BUILD_OPT=1';
+    system("(cd spidermonkey/src; make -f Makefile.ref JS_C_STRINGS_ARE_UTF8=1 JS_ENABLE_E4X=1 $debug_enable)") == 0
+        or die "Unable to build SpiderMonkey: $!";
+    print "DONE.\n";
+    $STATIC_BUILD = 1;
+
+    my ($build_dir) = glob("./spidermonkey/src/*.OBJ");
+
+    # XXX hacky... =0(
+    $lib = 'js';
+    @libs = ($build_dir);
+    $ENV{DYLD_LIBRARY_PATH} = $ENV{LD_LIBRARY_PATH} = $build_dir;
+    @incs = ('./spidermonkey/src', $build_dir);
+    push(@defines, qw(JS_C_STRINGS_ARE_UTF8 JS_ENABLE_E4X));
+    $STATIC_BUILD = 1;
+}
+
 #test for debian type libsmjs
 #this could probably be done better, but I'm not sure how to
 #get this platform independant
-if (-f "/usr/lib/libmozjs.so" or -f "/usr/local/lib/libmozjs.so") {
-    $lib = "mozjs";
-}
-elsif (-f "/usr/lib/libsmjs.so" or -f "/usr/local/lib/libsmjs.so") {
-    $lib = "smjs";
-}
-if (-f "/usr/include/smjs/jsapi.h") {
-    push @incs, "/usr/include/smjs/";
-    push @defines, "INCLUDES_IN_SMJS";
-    $inc_dir = "smjs/";
-}
-elsif(-f "/usr/local/include/smjs/jsapi.h") {
-    push @incs, "/usr/local/include/smjs/";
-    push @defines, "INCLUDES_IN_SMJS";
-}
-elsif(-f "/usr/include/mozjs/jsapi.h") {
-    push @incs, "/usr/include/mozjs/";
-    push @defines, "INCLUDES_IN_MOZJS";
-    $inc_dir = "mozjs/";
-}
-elsif(-f "/usr/local/include/mozjs/jsapi.h") {
-    push @incs, "/usr/local/include/mozjs/";
-    push @defines, "INCLUDES_IN_MOZJS";
-}
+if(!$STATIC_BUILD){
+    if (-f "/usr/lib/libmozjs.so" or -f "/usr/local/lib/libmozjs.so") {
+        $lib = "mozjs";
+    }
+    elsif (-f "/usr/lib/libsmjs.so" or -f "/usr/local/lib/libsmjs.so") {
+        $lib = "smjs";
+    }
+    if (-f "/usr/include/smjs/jsapi.h") {
+        push @incs, "/usr/include/smjs/";
+        push @defines, "INCLUDES_IN_SMJS";
+        $inc_dir = "smjs/";
+    }
+    elsif(-f "/usr/local/include/smjs/jsapi.h") {
+        push @incs, "/usr/local/include/smjs/";
+        push @defines, "INCLUDES_IN_SMJS";
+    }
+    elsif(-f "/usr/include/mozjs/jsapi.h") {
+        push @incs, "/usr/include/mozjs/";
+        push @defines, "INCLUDES_IN_MOZJS";
+        $inc_dir = "mozjs/";
+    }
+    elsif(-f "/usr/local/include/mozjs/jsapi.h") {
+        push @incs, "/usr/local/include/mozjs/";
+        push @defines, "INCLUDES_IN_MOZJS";
+    }
 
-# Debian puts nspr headers in /usr/include/nspr
-if (-f "/usr/include/nspr/pratom.h") {
-    push @incs, "/usr/include/nspr/";
-}
-# RHEL5/CentOS5 use /usr/include/nspr4 for nspr headers
-elsif (-f "/usr/include/nspr4/pratom.h") {
-    push @incs, "/usr/include/nspr4/";
-}
+    # Debian puts nspr headers in /usr/include/nspr
+    if (-f "/usr/include/nspr/pratom.h") {
+        push @incs, "/usr/include/nspr/";
+    }
+    # RHEL5/CentOS5 use /usr/include/nspr4 for nspr headers
+    elsif (-f "/usr/include/nspr4/pratom.h") {
+        push @incs, "/usr/include/nspr4/";
+    }
 
-# test for gentoo
-if(-f "/etc/gentoo-release") {
-    # Gentoo puts libjs in a slightly hidden spot.
-    @incs = qw(/usr/lib/MozillaFirefox/include/js/
-              /usr/lib/MozillaFirefox/);
+    # test for gentoo
+    if(-f "/etc/gentoo-release") {
+        # Gentoo puts libjs in a slightly hidden spot.
+        @incs = qw(/usr/lib/MozillaFirefox/include/js/
+                  /usr/lib/MozillaFirefox/);
 
-}
+    }
 
-# test for MacPorts
-if (-d "/opt/local/include/js") {
-    push @incs, "/opt/local/include/js", "/opt/local/include/nspr";
-    push @libs, "/opt/local/lib";
+    # test for MacPorts
+    if (-d "/opt/local/include/js") {
+        push @incs, "/opt/local/include/js", "/opt/local/include/nspr";
+        push @libs, "/opt/local/lib";
+    }
 }
 
 # Override with $ENV{JS_LIB} and $ENV{JS_INC}
-if (exists $ENV{JS_LIB}) {
-    @libs = get_paths($ENV{JS_LIB});
-    $ENV{DYLD_LIBRARY_PATH} = $ENV{LD_LIBRARY_PATH} = $ENV{JS_LIB};
-    $lib = "js";
-}
-if (exists $ENV{JS_INC}) {
-    @incs = get_paths($ENV{JS_INC});
-    @defines = grep { $_ ne "INCLUDES_IN_SMJS" } @defines;
-    $inc_dir = "";
+if(!$STATIC_BUILD){
+    if (exists $ENV{JS_LIB}) {
+        @libs = get_paths($ENV{JS_LIB});
+        $ENV{DYLD_LIBRARY_PATH} = $ENV{LD_LIBRARY_PATH} = $ENV{JS_LIB};
+        $lib = "js";
+    }
+    if (exists $ENV{JS_INC}) {
+        @incs = get_paths($ENV{JS_INC});
+        @defines = grep { $_ ne "INCLUDES_IN_SMJS" } @defines;
+        $inc_dir = "";
+    }
+
+
+    # Handle threadsafe
+    if(exists $ENV{JS_THREADSAFE}) {
+        push @defines, "JS_THREADSAFE" if $ENV{JS_THREADSAFE};
+    }
+    else {
+        my $enable_threadsafe = prompt("Is your SpiderMonkey compiled with JS_THREADSAFE (most things will fail if you answer wrong)? [y/N]");
+        push @defines, "JS_THREADSAFE" if $enable_threadsafe eq "y";
+    }
+
+    if (grep /^JS_THREADSAFE$/, @defines) {
+       print "Whoa there! Attention! You have asked me to build a JavaScript.pm that links against a SpiderMonkey built with ";
+       print "JS_THREADSAFE defined. Although must things will proabaly work as expected some might not and I really ";
+       print "don't put much effort into supporting JS_THREADSAFE (actually none expect accept some patches). ";
+       print "If you are using a JS_THREADSAFE it's likely because your OS vendor supplied the SpiderMonkey libs you're using ";
+       print "and instead I recommend you to download and build your own SpiderMonkey libs that doesn't use JS_THREADSAFE.\n";
+    }
+
+    # Check if we need to enable JS_C_STRINGS_ARE_UTF8?
+    if(exists $ENV{JS_UTF8}) {
+        push @defines, "JS_C_STRINGS_ARE_UTF8" if $ENV{JS_UTF8};
+    }
+    else {
+        my $enable_utf8 = prompt("Is your SpiderMonkey compiled with support for unicode (t/23-unicode.t will fail if you answer wrong) ? [y/N]", "N");
+        push @defines, "JS_C_STRINGS_ARE_UTF8" if $enable_utf8 eq "y";
+    }
+
+    # Check if we want E4X support
+    if (exists $ENV{JS_ENABLE_E4X}) {
+        if ($ENV{JS_ENABLE_E4X}) {
+            push @extra_headers, "jsxml";
+            push @defines, "JS_ENABLE_E4X";
+        }
+    }
+    else {
+        my $enable_e4x = prompt("Do you want support for E4X (requires SpiderMonkey > 1.5) ? [y/N]", "N");
+        if ($enable_e4x eq "y") {
+            push @extra_headers, "jsxml";
+            push @defines, "JS_ENABLE_E4X";     
+        }
+    }
+
+    if ($ENV{JS_LIB_NAME}) { $lib = $ENV{JS_LIB_NAME} }
 }
 
 my $libs = join(" ", map { "-L$_" } @libs);
-
-# Handle threadsafe
-if(exists $ENV{JS_THREADSAFE}) {
-    push @defines, "JS_THREADSAFE" if $ENV{JS_THREADSAFE};
-}
-else {
-    my $enable_threadsafe = prompt("Is your SpiderMonkey compiled with JS_THREADSAFE (most things will fail if you answer wrong)? [y/N]");
-    push @defines, "JS_THREADSAFE" if $enable_threadsafe eq "y";
-}
-
-if (grep /^JS_THREADSAFE$/, @defines) {
-   print "Whoa there! Attention! You have asked me to build a JavaScript.pm that links against a SpiderMonkey built with ";
-   print "JS_THREADSAFE defined. Although must things will proabaly work as expected some might not and I really ";
-   print "don't put much effort into supporting JS_THREADSAFE (actually none expect accept some patches). ";
-   print "If you are using a JS_THREADSAFE it's likely because your OS vendor supplied the SpiderMonkey libs you're using ";
-   print "and instead I recommend you to download and build your own SpiderMonkey libs that doesn't use JS_THREADSAFE.\n";
-}
-
-# Check if we need to enable JS_C_STRINGS_ARE_UTF8?
-if(exists $ENV{JS_UTF8}) {
-    push @defines, "JS_C_STRINGS_ARE_UTF8" if $ENV{JS_UTF8};
-}
-else {
-    my $enable_utf8 = prompt("Is your SpiderMonkey compiled with support for unicode (t/23-unicode.t will fail if you answer wrong) ? [y/N]", "N");
-    push @defines, "JS_C_STRINGS_ARE_UTF8" if $enable_utf8 eq "y";
-}
-
-# Check if we want E4X support
-if (exists $ENV{JS_ENABLE_E4X}) {
-    if ($ENV{JS_ENABLE_E4X}) {
-        push @extra_headers, "jsxml";
-        push @defines, "JS_ENABLE_E4X";
-    }
-}
-else {
-    my $enable_e4x = prompt("Do you want support for E4X (requires SpiderMonkey > 1.5) ? [y/N]", "N");
-    if ($enable_e4x eq "y") {
-        push @extra_headers, "jsxml";
-        push @defines, "JS_ENABLE_E4X";     
-    }
-}
-
-if ($ENV{JS_LIB_NAME}) { $lib = $ENV{JS_LIB_NAME} }
 
 # Write JavaScript_Env.h
 open my $header, ">JavaScript_Env.h" || die $!;
@@ -226,6 +252,7 @@ WriteMakefile(
             repository => "svn://svn.versed.se/public/Perl/modules/JavaScript"
         }
     },
+    ($STATIC_BUILD ? ( linkext => { LINKTYPE => 'static' } ) : ()),
 );
 
 sub get_paths {
