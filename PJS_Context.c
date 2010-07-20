@@ -14,6 +14,9 @@
 #include "PJS_PerlHash.h"
 #include "PJS_PerlSub.h"
 
+#define NEED_mro_get_linear_isa /* or NEED_mro_get_linear_isa_GLOBAL */
+#include "mro_compat.h"
+
 /* Global class, does nothing */
 static JSClass global_class = {
     "global", 0,
@@ -59,10 +62,41 @@ PJS_GetClassByPackage(PJS_Context *cx, const char *pkg) {
     SV        **sv;
     IV        tmp;
     
+    
     sv = hv_fetch(cx->class_by_package, pkg, strlen(pkg), 0);
     if (sv == NULL) {
-        return NULL;
+        HV *stash;
+        AV *isa;
+        int i;
+        const char *tmp_pkg;
+        STRLEN l;
+        
+        /* Non found, try walking the ISA */
+        stash = gv_stashpv(pkg, 0);
+        if (stash == NULL) {
+            return NULL;
+        }
+        
+        isa = mro_get_linear_isa(stash);
+        if (isa == NULL) {
+            return NULL;
+        }
+
+        for (i = 0; sv == NULL && i < av_len(isa); i++) {
+            sv = av_fetch(isa, i, 0);
+            if (sv != NULL) {
+                tmp_pkg = SvPV(*sv, l);
+                sv = hv_fetch(cx->class_by_package, tmp_pkg, l, 0);
+            }
+        }
+        
+        av_undef(isa);
+        /* Still null means we didn't find anything in ISA */
+        if (sv == NULL) {
+            return NULL;
+        }
     }
+
     tmp = SvIV((SV *) SvRV(*sv));
     cls = INT2PTR(PJS_Class *, tmp);
     

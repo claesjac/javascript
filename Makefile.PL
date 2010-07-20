@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use ExtUtils::MakeMaker;
+use ExtUtils::Depends;
 use File::Temp qw(:POSIX);
 use Config;
 
@@ -207,18 +208,25 @@ if($^O eq "MSWin32") {
     $libs_flags = ":nosearch";
 }
 
+my %devel_mro = ExtUtils::Depends->new('JavaScript', 'Devel::MRO')->get_makefile_vars;
+    
 WriteMakefile(
     NAME            => "JavaScript",
     VERSION_FROM    => "lib/JavaScript.pm",
     PREREQ_PM       => {
         "Test::More"      => 0,
         "Test::Exception" => 0,
+        (
+            $] < 5.010_000 ? 
+            ("Devel::MRO" => 0.05) :
+            ()
+        )
     },
     ABSTRACT_FROM   => "lib/JavaScript.pm", # retrieve abstract from module
     AUTHOR          => "Claes Jakobsson <claesjac\@cpan.org>",
     CCFLAGS         => join(" ", @ccflags),
     LIBS            => ["$libs_flags $libs -l${lib}"], # e.g., "-lm"
-    INC             => join(" ", map { "-I$_" } @incs),
+    INC             => join(" ", (map { "-I$_" } @incs), $devel_mro{INC} ),
     LICENSE         => "perl",
     OBJECT          => q/$(O_FILES)/,
     META_MERGE      => {
