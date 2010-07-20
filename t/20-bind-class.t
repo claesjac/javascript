@@ -2,7 +2,7 @@
 
 package Foo;
 
-use Test::More tests => 32;
+use Test::More tests => 34;
 
 use Test::Exception;
 
@@ -235,10 +235,15 @@ my $rt1 = JavaScript::Runtime->new();
     diag($@) if $@;
     is($property, "x");
 
+    is($cx1->eval("(new Foo())[10]"), "20", "(new Foo())[2] return x");
+    diag($@) if $@;
+    is($property, 10);
+
     ok($cx1->eval("(new Foo()).y = 30"));
     is($property, "y");
     is($value, 30);
     diag($@) if $@;
+    
 }
 
 #  LocalWords:  STDERR

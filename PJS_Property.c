@@ -94,6 +94,12 @@ JSBool PJS_invoke_perl_property_getter(JSContext *cx, JSObject *obj, jsval id, j
       slot = JSVAL_TO_INT(id);
     
       if ((pprop = PJS_get_property_by_id(pcls,  (int8) slot)) == NULL) {
+        if (SvTRUE(pcls->property_getter)) {
+            if (perl_call_sv_with_jsvals(cx, obj, pcls->property_getter, caller, 1, &id, vp) < 0) {
+                return JS_FALSE;
+            }
+            return JS_TRUE;
+        }
         JS_ReportError(cx, "Can't find property handler");
         return JS_FALSE;
       }
