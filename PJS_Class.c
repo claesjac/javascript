@@ -79,6 +79,15 @@ void PJS_free_class(PJS_Class *pcls) {
     PJS_free_JSPropertySpec(pcls->ps);
     PJS_free_JSPropertySpec(pcls->static_ps);
     
+    /* Free getters and setters */
+    if (pcls->property_getter) {
+      SvREFCNT_dec(pcls->property_getter);
+    }
+    
+    if (pcls->property_setter) {
+      SvREFCNT_dec(pcls->property_setter);
+    }
+    
     /* Seems like SM handles this part for us */
 /*    if (pcls->flags & PJS_FREE_JSCLASS) {
         Safefree(pcls->clasp->name);
@@ -88,7 +97,7 @@ void PJS_free_class(PJS_Class *pcls) {
     Safefree(pcls);
 }
 
-void PJS_bind_class(PJS_Context *pcx, char *name, char *pkg, SV *cons, HV *fs, HV *static_fs, HV *ps, HV *static_ps, U32 flags) {
+void PJS_bind_class(PJS_Context *pcx, char *name, char *pkg, SV *cons, HV *fs, HV *static_fs, HV *ps, HV *static_ps, SV *prop_get, SV *prop_set, U32 flags) {
     PJS_Class *pcls;
     
     if (pcx == NULL) {
@@ -153,6 +162,15 @@ void PJS_bind_class(PJS_Context *pcx, char *name, char *pkg, SV *cons, HV *fs, H
     pcls->static_fs = PJS_add_class_functions(pcls, static_fs, PJS_CLASS_METHOD);
     pcls->static_ps = PJS_add_class_properties(pcls, static_ps, PJS_CLASS_METHOD);
 
+    /* Property getter and setters */
+    if (prop_get) {
+      pcls->property_getter = SvREFCNT_inc(prop_get);
+    }
+    
+    if (prop_set) {
+      pcls->property_setter = SvREFCNT_inc(prop_set);
+    }
+    
     /* Initialize class */
     pcls->proto = JS_InitClass(PJS_GetJSContext(pcx), JS_GetGlobalObject(PJS_GetJSContext(pcx)),
                                NULL, pcls->clasp,

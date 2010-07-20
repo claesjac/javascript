@@ -1,5 +1,8 @@
 Revision history for Perl extension JavaScript.
 
+1.17
+    - It's now possible to set a generic getter and setter for classes
+    
 1.16  2010-02-20
 	- Fixed a bunch of memory leaks (Scott++ for reporting them)
 	- Added some missing private docs for jsc_set_pending_exception

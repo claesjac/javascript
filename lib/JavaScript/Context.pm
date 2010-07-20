@@ -250,6 +250,11 @@ sub bind_class {
         };
     }
     
+    # Property getter/setter
+    my ($prop_get, $prop_set); 
+    $prop_get = _resolve_method($args{getter}, 0) if exists $args{getter};
+    $prop_set = _resolve_method($args{setter}, 0) if exists $args{setter};
+
     # Per-object methods
     my $fs = _extract_methods(\%args, qw(methods fs));
 
@@ -265,7 +270,7 @@ sub bind_class {
     # Flags
     my $flags = $args{flags};
     
-    jsc_bind_class($self, $name, $pkg, $cons, $fs, $static_fs, $ps, $static_ps, $flags);
+    jsc_bind_class($self, $name, $pkg, $cons, $fs, $static_fs, $ps, $static_ps, $prop_get, $prop_set, $flags);
     
     return;
 }
@@ -490,6 +495,18 @@ You can specify the getter/setter using either an array reference, C<[\&MyClass:
 =item static_properties (static_ps)
 
 Like I<ps> but these are defined on the class itself. In JavaScript this would be C<f = MyClass.property>.
+
+=item getter 
+
+A code reference or the name of a method to call when a property is requested from the object 
+or class. First argument is either the class or an instance and the second the name of the 
+property to get.
+
+=item setter
+
+A code reference or the name of a method to call when a property is set on the object or class. First 
+argument is either the class or an instance, second the name of the property and thirdly the value 
+to set.
 
 =item flags
 

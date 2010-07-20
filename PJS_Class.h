@@ -41,6 +41,9 @@ struct PJS_Class {
     JSPropertySpec *ps;
     JSPropertySpec *static_ps;
 
+    /* Getters and setters */
+    SV *property_getter, *property_setter;
+    
     /* Flags such as JS_CLASS_NO_INSTANCE */
     I32 flags;
 
@@ -57,7 +60,7 @@ PJS_EXTERN void
 PJS_free_class(PJS_Class *);
 
 PJS_EXTERN void
-PJS_bind_class(PJS_Context *, char *, char *, SV *, HV *, HV *, HV *, HV *, U32);
+PJS_bind_class(PJS_Context *, char *, char *, SV *, HV *, HV *, HV *, HV *, SV *, SV*, U32);
 
 PJS_EXTERN void
 PJS_finalize(JSContext *, JSObject *);

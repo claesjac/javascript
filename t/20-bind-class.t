@@ -2,7 +2,7 @@
 
 package Foo;
 
-use Test::More tests => 25;
+use Test::More tests => 32;
 
 use Test::Exception;
 
@@ -198,6 +198,46 @@ my $rt1 = JavaScript::Runtime->new();
     is($cx1->eval("(new Foo()).x"), "x", "(new Foo()).x return x");
     diag($@) if $@;
     is($cx1->eval("Foo.y"), "y", "Foo.y returns y");
+    diag($@) if $@;
+}
+
+{
+    # Check that static_ps and ps can coexist
+    my $cx1 = $rt1->create_context();
+    $cx1->bind_class(name => "Foo",
+                     constructor => "new",
+                     ps => { x => { getter => sub { return "x"; } } },
+                     static_ps => { y => { getter => sub { return "y"; } } }
+                     );
+    is($cx1->eval("(new Foo()).x"), "x", "(new Foo()).x return x");
+    diag($@) if $@;
+    is($cx1->eval("Foo.y"), "y", "Foo.y returns y");
+    diag($@) if $@;
+}
+
+{
+    # Check that static_ps and ps can coexist
+    my $cx1 = $rt1->create_context();
+    my ($self, $property, $value);
+    $cx1->bind_class(
+        name => "Foo",
+        constructor => "new",
+        getter => sub { 
+            ($self, $property) = @_;
+            return 20;
+        },
+        setter => sub {
+            (undef, $property, $value) = @_;
+        },
+    );
+
+    is($cx1->eval("(new Foo()).x"), "20", "(new Foo()).x return x");
+    diag($@) if $@;
+    is($property, "x");
+
+    ok($cx1->eval("(new Foo()).y = 30"));
+    is($property, "y");
+    is($value, 30);
     diag($@) if $@;
 }
 

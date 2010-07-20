@@ -192,7 +192,7 @@ jsc_bind_function(cx, name, callback)
         PJS_DefineFunction(cx, name, callback);
 
 void
-jsc_bind_class(cx, name, pkg, cons, fs, static_fs, ps, static_ps, flags)
+jsc_bind_class(cx, name, pkg, cons, fs, static_fs, ps, static_ps, prop_get, prop_set, flags)
     JavaScript::Context cx;
     char *name;
     char *pkg;
@@ -201,9 +201,11 @@ jsc_bind_class(cx, name, pkg, cons, fs, static_fs, ps, static_ps, flags)
     HV *static_fs;
     HV *ps;
     HV *static_ps;
+    SV *prop_get;
+    SV *prop_set;
     U32 flags;
     CODE:
-        PJS_bind_class(cx, name, pkg, cons, fs, static_fs, ps, static_ps, flags);
+        PJS_bind_class(cx, name, pkg, cons, fs, static_fs, ps, static_ps, prop_get, prop_set, flags);
 
 int
 jsc_bind_value(cx, parent, name, object)

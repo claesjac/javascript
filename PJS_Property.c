@@ -52,7 +52,7 @@ JSBool PJS_invoke_perl_property_getter(JSContext *cx, JSObject *obj, jsval id, j
     jsint slot;
     U8 invocation_mode;
 
-    if (!JSVAL_IS_INT(id)) {
+    if (!(JSVAL_IS_INT(id) || JSVAL_IS_STRING(id))) {
         return JS_TRUE;
     }
     
@@ -82,29 +82,49 @@ JSBool PJS_invoke_perl_property_getter(JSContext *cx, JSObject *obj, jsval id, j
         JS_ReportError(cx, "Can't find class '%s'", name);
         return JS_FALSE;
     }
-
-    slot = JSVAL_TO_INT(id);
-
-    if ((pprop = PJS_get_property_by_id(pcls,  (int8) slot)) == NULL) {
-        JS_ReportError(cx, "Can't find property handler");
-        return JS_FALSE;
-    }
-
-    if (pprop->getter == NULL) {
-        JS_ReportError(cx, "Property is write-only");
-        return JS_FALSE;
-    }
-
+    
     if (invocation_mode) {
         caller = (SV *) JS_GetPrivate(cx, obj);
     }
     else {
         caller = newSVpv(pcls->pkg, 0);
     }
-
-    if (perl_call_sv_with_jsvals(cx, obj, pprop->getter,
-                                 caller, 0, NULL, vp) < 0) {
+    
+    if (JSVAL_IS_INT(id)) {
+      slot = JSVAL_TO_INT(id);
+    
+      if ((pprop = PJS_get_property_by_id(pcls,  (int8) slot)) == NULL) {
+        JS_ReportError(cx, "Can't find property handler");
         return JS_FALSE;
+      }
+
+      if (pprop->getter == NULL) {
+        JS_ReportError(cx, "Property is write-only");
+        return JS_FALSE;
+      }
+
+      if (perl_call_sv_with_jsvals(cx, obj, pprop->getter, caller, 0, NULL, vp) < 0) {
+        return JS_FALSE;
+      }
+    }
+    else if (JSVAL_IS_STRING(id) && SvTRUE(pcls->property_getter)) {
+      SV *sv = sv_newmortal();
+#ifdef JS_C_STRINGS_ARE_UTF8
+      char *tmp = JS_smprintf("%hs", JS_GetStringChars(JSVAL_TO_STRING(id)));
+      sv_setpv(sv, tmp);
+      SvUTF8_on(sv);
+      free(tmp);
+#else
+      sv_setpv(sv, JS_GetStringBytes(JSVAL_TO_STRING(id)));
+#endif         
+
+      if (PJS_get_method_by_name(pcls, SvPV_nolen(sv))) {
+        return JS_TRUE;
+      }
+      
+      if (perl_call_sv_with_jsvals(cx, obj, pcls->property_getter, caller, 1, &id, vp) < 0) {
+        return JS_FALSE;
+      }      
     }
 
     return JS_TRUE;
@@ -120,7 +140,7 @@ JSBool PJS_invoke_perl_property_setter(JSContext *cx, JSObject *obj, jsval id, j
     jsint slot;
     U8 invocation_mode;
 
-    if (!JSVAL_IS_INT(id)) {
+    if (!(JSVAL_IS_INT(id) || JSVAL_IS_STRING(id))) {
         return JS_TRUE;
     }
     
@@ -151,18 +171,6 @@ JSBool PJS_invoke_perl_property_setter(JSContext *cx, JSObject *obj, jsval id, j
         return JS_FALSE;
     }
 
-    slot = JSVAL_TO_INT(id);
-
-    if ((pprop = PJS_get_property_by_id(pcls,  (int8) slot)) == NULL) {
-        JS_ReportError(cx, "Can't find property handler");
-        return JS_FALSE;
-    }
-
-    if (pprop->setter == NULL) {
-        JS_ReportError(cx, "Property is read-only");
-        return JS_FALSE;
-    }
-
     if (invocation_mode) {
         caller = (SV *) JS_GetPrivate(cx, obj);
     }
@@ -170,10 +178,43 @@ JSBool PJS_invoke_perl_property_setter(JSContext *cx, JSObject *obj, jsval id, j
         caller = newSVpv(pcls->pkg, 0);
     }
 
-    if (perl_call_sv_with_jsvals(cx, obj, pprop->setter,
-                                 caller, 1, vp, NULL) < 0) {
-        return JS_FALSE;
-    }
+    if (JSVAL_IS_INT(id)) {
+      slot = JSVAL_TO_INT(id);
 
+      if ((pprop = PJS_get_property_by_id(pcls,  (int8) slot)) == NULL) {
+          JS_ReportError(cx, "Can't find property handler");
+          return JS_FALSE;
+      }
+    
+      if (pprop->setter == NULL) {
+        JS_ReportError(cx, "Property is read-only");
+        return JS_FALSE;
+      }
+
+      if (perl_call_sv_with_jsvals(cx, obj, pprop->setter,caller, 1, vp, NULL) < 0) {
+        return JS_FALSE;
+      }
+    }
+    else if (JSVAL_IS_STRING(id) && SvTRUE(pcls->property_setter)) {
+      SV *sv = sv_newmortal();
+#ifdef JS_C_STRINGS_ARE_UTF8
+      char *tmp = JS_smprintf("%hs", JS_GetStringChars(JSVAL_TO_STRING(id)));
+      sv_setpv(sv, tmp);
+      SvUTF8_on(sv);
+      free(tmp);
+#else
+      sv_setpv(sv, JS_GetStringBytes(JSVAL_TO_STRING(id)));
+#endif         
+
+      if (PJS_get_method_by_name(pcls, SvPV_nolen(sv))) {
+        return JS_TRUE;
+      }
+
+      jsval args[2] = { id, *vp };
+      if (perl_call_sv_with_jsvals(cx, obj, pcls->property_setter, caller, 2, args, NULL) < 0) {
+        return JS_FALSE;
+      }
+    }
+    
     return JS_TRUE;
 }
