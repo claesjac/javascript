@@ -2,6 +2,8 @@ Revision history for Perl extension JavaScript.
 
 1.17
     - It's now possible to set a generic getter and setter for classes
+    - properties is bind_class can now be given a code reference directly instead
+      of an array with it. This is equal to giving it an array with only a getter.
     
 1.16  2010-02-20
 	- Fixed a bunch of memory leaks (Scott++ for reporting them)

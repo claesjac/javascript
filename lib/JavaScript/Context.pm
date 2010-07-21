@@ -191,6 +191,10 @@ sub _extract_properties {
                         my $setter = _resolve_method(shift @callbacks, 1);
                         $property->{$name} = [ $getter, $setter ];
                     }
+                    elsif (ref $arg->{$name} eq "CODE") {
+                        # Read only getter
+                        $property->{$name} = [ $arg->{$name}, undef ];
+                    }
                     elsif (ref $arg->{$name} eq '') {
                         my $getter = sub {
                             return $_[0]->{$name};
