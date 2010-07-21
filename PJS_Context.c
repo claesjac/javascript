@@ -90,7 +90,6 @@ PJS_GetClassByPackage(PJS_Context *cx, const char *pkg) {
             }
         }
         
-        av_undef(isa);
         /* Still null means we didn't find anything in ISA */
         if (sv == NULL) {
             return NULL;
