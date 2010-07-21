@@ -4,7 +4,11 @@ Revision history for Perl extension JavaScript.
     - It's now possible to set a generic getter and setter for classes
     - properties is bind_class can now be given a code reference directly instead
       of an array with it. This is equal to giving it an array with only a getter.
-    
+    - Add spidermonkey local rooting to type conversion to mark points for the spidermonkey GC (KONOBI)
+    - Add set_thread_stack_limit (KONOBI)
+    - Add a call to JS_MaybeGC in TypeConversion to indicate to spidermonkey GC to attempt collection (KONOBI)
+
+
 1.16  2010-02-20
 	- Fixed a bunch of memory leaks (Scott++ for reporting them)
 	- Added some missing private docs for jsc_set_pending_exception
