@@ -78,7 +78,7 @@ blahblah this is bad;
 EOP
 
 is($ret, undef);
-like($@, qr/at t\/29-exceptions.t line 75/);
+like($@, qr/at t\/29-exceptions.t line 76/);
 
 
 $ret = $context->eval(<<EOP);
