@@ -29,13 +29,12 @@ sub new {
 }
 
 sub eval {
-    my ($self, $source, $name) = @_;
+    my ($self, $source, $name, $lineno) = @_;
 
     # Figure out name of script in case it isn't supplied to us
-    my @caller = caller();
-    $name ||= "$caller[0] line $caller[2]";
+    (undef, $name, $lineno) = caller unless defined $name;
     
-    my $rval = jsc_eval($self, $source, $name);
+    my $rval = jsc_eval($self, $source, $name, defined $lineno ? $lineno : ());
 
     return $rval;
 }

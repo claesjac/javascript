@@ -286,10 +286,11 @@ jsc_unbind_value(cx, parent, name)
         }
 
 jsval 
-jsc_eval(cx, source, name)
+jsc_eval(cx, source, name, lineno=1)
     JavaScript::Context cx;
     char *source;
     char *name;
+    int lineno;
     PREINIT:
         jsval rval;
         JSContext *jcx;
@@ -302,7 +303,7 @@ jsc_eval(cx, source, name)
         jcx = PJS_GetJSContext(cx);
         gobj = JS_GetGlobalObject(jcx);
 #ifndef JSOPTION_DONT_REPORT_UNCAUGHT
-        script = JS_CompileScript(jcx, gobj, source, strlen(source), name, 1);
+        script = JS_CompileScript(jcx, gobj, source, strlen(source), name, lineno);
         if (script == NULL) {
             PJS_report_exception(cx);
             XSRETURN_UNDEF;
@@ -314,7 +315,7 @@ jsc_eval(cx, source, name)
         }
         JS_DestroyScript(jcx, script);
 #else
-        ok = JS_EvaluateScript(jcx, gobj, source, strlen(source), name, 1, &rval);
+        ok = JS_EvaluateScript(jcx, gobj, source, strlen(source), name, lineno, &rval);
         if (ok == JS_FALSE || JS_IsExceptionPending(jcx) == JS_TRUE) {
             PJS_report_exception(cx);
         }

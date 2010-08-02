@@ -2,6 +2,8 @@ Revision history for Perl extension JavaScript.
 
 1.17
     - Stringification of exception now makes more sense and follows normal Perl more.
+      Now it tells the name of the calling file and the actual line-no and not the offset
+      in eval and the caller package as before.
     - It's now possible to set a generic getter and setter for classes
     - properties is bind_class can now be given a code reference directly instead
       of an array with it. This is equal to giving it an array with only a getter.
