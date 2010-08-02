@@ -78,7 +78,7 @@ blahblah this is bad;
 EOP
 
 is($ret, undef);
-like($@, qr/at main line 75 in 1/);
+like($@, qr/at main line 75 line 1/);
 
 
 $ret = $context->eval(<<EOP);

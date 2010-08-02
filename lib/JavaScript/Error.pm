@@ -7,7 +7,7 @@ use overload q{""} => 'as_string', fallback => 1;
 
 sub as_string {
     my $self = shift;
-    return "$self->{message} at $self->{fileName} in $self->{lineNumber}";
+    return "$self->{message} at $self->{fileName} line $self->{lineNumber}";
 }
 
 sub message {
